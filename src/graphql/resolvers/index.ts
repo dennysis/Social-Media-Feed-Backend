@@ -1,4 +1,3 @@
-// src/graphql/resolvers/index.ts
 import userResolver from './userResolver';
 import postResolver from './postResolver';
 import likeResolver from './likeResolver';

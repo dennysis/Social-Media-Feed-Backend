@@ -8,10 +8,8 @@ const likeResolver = {
         extensions: { code: 'UNAUTHENTICATED' }
       });
       
-      // Convert postId to number if it's a string
       const postIdNum = typeof postId === 'string' ? parseInt(postId, 10) : postId;
       
-      // Prevent duplicate likes by the same user on the same post
       const existingLike = await prisma.like.findFirst({
         where: { postId: postIdNum, userId: user.id }
       });

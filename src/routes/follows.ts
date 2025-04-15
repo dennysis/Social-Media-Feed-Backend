@@ -4,21 +4,21 @@ import { authenticateUser } from '../middleware/authMiddleware';
 
 const router = Router();
 
-// Follow a user
+
 router.post('/:userId', authenticateUser, async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
     const followerId = req.user.id;
     
-    // Convert userId to number
+   
     const userIdNum = Number(userId);
     
-    // Prevent following yourself
+  
     if (followerId === userIdNum) {
       return res.status(400).json({ error: "You can't follow yourself" });
     }
     
-    // Check if user exists
+
     const userToFollow = await prisma.user.findUnique({
       where: { id: userIdNum }
     });
@@ -26,8 +26,7 @@ router.post('/:userId', authenticateUser, async (req: Request, res: Response) =>
     if (!userToFollow) {
       return res.status(404).json({ error: 'User not found' });
     }
-    
-    // Check if already following
+   
     const existingFollow = await prisma.follow.findFirst({
       where: { 
         followerId, 
@@ -39,7 +38,7 @@ router.post('/:userId', authenticateUser, async (req: Request, res: Response) =>
       return res.status(400).json({ error: 'Already following this user' });
     }
     
-    // Create follow relationship
+
     const follow = await prisma.follow.create({
       data: {
         follower: { connect: { id: followerId } },
@@ -55,16 +54,16 @@ router.post('/:userId', authenticateUser, async (req: Request, res: Response) =>
   }
 });
 
-// Unfollow a user
+
 router.delete('/:userId', authenticateUser, async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
     const followerId = req.user.id;
     
-    // Convert userId to number
+
     const userIdNum = Number(userId);
     
-    // Find the follow relationship
+
     const followRecord = await prisma.follow.findFirst({
       where: { 
         followerId, 
@@ -75,8 +74,7 @@ router.delete('/:userId', authenticateUser, async (req: Request, res: Response) 
     if (!followRecord) {
       return res.status(404).json({ error: 'Not following this user' });
     }
-    
-    // Delete the follow relationship
+
     await prisma.follow.delete({
       where: { id: followRecord.id }
     });
@@ -88,7 +86,6 @@ router.delete('/:userId', authenticateUser, async (req: Request, res: Response) 
   }
 });
 
-// Get followers of a user
 router.get('/:userId/followers', async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
@@ -99,7 +96,7 @@ router.get('/:userId/followers', async (req: Request, res: Response) => {
       include: { follower: true }
     });
     
-    // Add explicit type to the follow parameter
+
     return res.status(200).json(followers.map((follow: { follower: any }) => follow.follower));
   } catch (error) {
     console.error('Error fetching followers:', error);
@@ -107,7 +104,6 @@ router.get('/:userId/followers', async (req: Request, res: Response) => {
   }
 });
 
-// Get users that a user is following
 router.get('/:userId/following', async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
@@ -118,7 +114,7 @@ router.get('/:userId/following', async (req: Request, res: Response) => {
       include: { following: true }
     });
     
-    // Add explicit type to the follow parameter
+
     return res.status(200).json(following.map((follow: { following: any }) => follow.following));
   } catch (error) {
     console.error('Error fetching following:', error);

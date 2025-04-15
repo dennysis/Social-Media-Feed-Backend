@@ -16,13 +16,14 @@ const mockPrisma = {
             id: 3,
             username: 'logintest',
             email: 'login@example.com',
-            password: '$2b$10$X2Pn4RvU6OHrOQ5/ca8ArOksJx22iA3EWI66xLpLOyxbbFBMGQ1zS', // bcrypt hash for 'password123'
+            password: '$2b$10$X2Pn4RvU6OHrOQ5/ca8ArOksJx22iA3EWI66xLpLOyxbbFBMGQ1zS', 
             createdAt: new Date()
           });
         }
         return Promise.resolve(null);
       }),
-      findMany: jest.fn()
+      findMany: jest.fn(),
+      update: jest.fn()
     },
     post: {
         create: jest.fn().mockImplementation((args) => {
@@ -52,7 +53,7 @@ const mockPrisma = {
           createdAt: new Date()
         });
       }),
-     // Update the post.findMany implementation:
+    
     findMany: jest.fn().mockImplementation(() => {
     return Promise.resolve([
       {
@@ -125,8 +126,12 @@ const mockPrisma = {
       findMany: jest.fn(),
       delete: jest.fn()
     },
+    passwordReset: {
+      upsert: jest.fn(),
+      findFirst: jest.fn(),
+      delete: jest.fn()
+    },
     $disconnect: jest.fn()
   };
   
-  export default mockPrisma;
-  
+  export default mockPrisma;  

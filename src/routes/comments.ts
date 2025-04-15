@@ -6,7 +6,6 @@ import express from 'express';
 
 const router = Router();
 
-// Apply CORS middleware specifically for this router
 router.use(cors({
   origin: 'http://localhost:5173',
   credentials: true,
@@ -14,11 +13,10 @@ router.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Apply JSON body parser middleware specifically for this router
+
 router.use(express.json());
 router.use(express.urlencoded({ extended: true }));
 
-// Handle preflight OPTIONS requests
 router.options('/:postId', (req, res) => {
   res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -27,12 +25,12 @@ router.options('/:postId', (req, res) => {
   res.status(204).end();
 });
 
-// GET all comments for a specific post
+
 router.get('/post/:postId', async (req, res) => {
   try {
     const { postId } = req.params;
     
-    // Check if post exists
+
     const post = await prisma.post.findUnique({
       where: { id: Number(postId) }
     });
@@ -41,7 +39,7 @@ router.get('/post/:postId', async (req, res) => {
       return res.status(404).json({ error: 'Post not found' });
     }
     
-    // Get all comments for the post
+
     const comments = await prisma.comment.findMany({
       where: { postId: Number(postId) },
       include: { 
@@ -58,7 +56,7 @@ router.get('/post/:postId', async (req, res) => {
   }
 });
 
-// GET a specific comment by ID
+
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -82,13 +80,12 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// POST a new comment on a post
+
 router.post('/post/:postId', authenticateUser, async (req: Request, res: Response) => {
   try {
     console.log('Request body:', req.body);
     console.log('Headers:', req.headers);
-    
-    // Try to extract content from the request body
+
     let content = '';
     
     if (req.body && typeof req.body === 'object') {
@@ -110,8 +107,7 @@ router.post('/post/:postId', authenticateUser, async (req: Request, res: Respons
     if (!content) {
       return res.status(400).json({ error: 'Comment content is required' });
     }
-    
-    // Check if post exists
+ 
     const post = await prisma.post.findUnique({
       where: { id: Number(postId) }
     });
@@ -119,8 +115,7 @@ router.post('/post/:postId', authenticateUser, async (req: Request, res: Respons
     if (!post) {
       return res.status(404).json({ error: 'Post not found' });
     }
-    
-    // Create the comment
+
     const comment = await prisma.comment.create({
       data: {
         content,
@@ -140,7 +135,6 @@ router.post('/post/:postId', authenticateUser, async (req: Request, res: Respons
   }
 });
 
-// PUT (update) a specific comment
 router.put('/:id', authenticateUser, async (req, res) => {
   try {
     const { id } = req.params;
@@ -150,8 +144,7 @@ router.put('/:id', authenticateUser, async (req, res) => {
     if (!content) {
       return res.status(400).json({ error: 'Comment content is required' });
     }
-    
-    // Check if comment exists
+
     const existingComment = await prisma.comment.findUnique({
       where: { id: Number(id) }
     });
@@ -159,13 +152,12 @@ router.put('/:id', authenticateUser, async (req, res) => {
     if (!existingComment) {
       return res.status(404).json({ error: 'Comment not found' });
     }
-    
-    // Check if user is the author of the comment
+   
     if (existingComment.authorId !== userId) {
       return res.status(403).json({ error: 'Not authorized to update this comment' });
     }
     
-    // Update the comment
+
     const updatedComment = await prisma.comment.update({
       where: { id: Number(id) },
       data: { content },
@@ -182,13 +174,12 @@ router.put('/:id', authenticateUser, async (req, res) => {
   }
 });
 
-// DELETE a specific comment
 router.delete('/:id', authenticateUser, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
     
-    // Check if comment exists
+
     const existingComment = await prisma.comment.findUnique({
       where: { id: Number(id) }
     });
@@ -196,10 +187,9 @@ router.delete('/:id', authenticateUser, async (req, res) => {
     if (!existingComment) {
       return res.status(404).json({ error: 'Comment not found' });
     }
-    
-    // Check if user is the author of the comment or the post owner
+ 
     if (existingComment.authorId !== userId) {
-      // Check if user is the post owner
+
       const post = await prisma.post.findUnique({
         where: { id: existingComment.postId }
       });
@@ -209,7 +199,7 @@ router.delete('/:id', authenticateUser, async (req, res) => {
       }
     }
     
-    // Delete the comment
+
     await prisma.comment.delete({
       where: { id: Number(id) }
     });

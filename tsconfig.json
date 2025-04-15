@@ -9,7 +9,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "typeRoots": ["./node_modules/@types", "./src/types"],
-    "types": ["node", "long", "jest","mime"]  // removed 'mime' based on previous recommendation
+    "types": ["node", "long", "jest","mime"] 
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "build"]

@@ -1,31 +1,28 @@
 import express, { Router, Request, Response } from 'express';
 import * as bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import prisma from '../config/database';
+import { sendWelcomeEmail, generatePasswordResetToken, sendPasswordResetEmail } from '../utils/emailService';
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
-// Add middleware directly to this router
 router.use(express.json());
 
-// Register route
 router.post('/register', async (req: Request, res: Response) => {
   try {
     const { username, email, password } = req.body;
     
-    // Validate input
     if (!username || !email || !password) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
     
-    // Check if user already exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ error: 'User with this email already exists' });
     }
     
-    // Hash password and create user
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
       data: {
@@ -35,10 +32,11 @@ router.post('/register', async (req: Request, res: Response) => {
       }
     });
     
-    // Generate JWT token
+    // Send welcome email
+    await sendWelcomeEmail(email, username);
+    
     const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
     
-    // Return user data without password
     const { password: _, ...userWithoutPassword } = user;
     return res.status(201).json({ token, user: userWithoutPassword });
   } catch (error) {
@@ -47,32 +45,26 @@ router.post('/register', async (req: Request, res: Response) => {
   }
 });
 
-// Login route
 router.post('/login', async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
     
-    // Validate input
     if (!email || !password) {
       return res.status(400).json({ error: 'Missing email or password' });
     }
     
-    // Find user
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     
-    // Verify password
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     
-    // Generate JWT token
     const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
     
-    // Return user data without password
     const { password: _, ...userWithoutPassword } = user;
     return res.status(200).json({ token, user: userWithoutPassword });
   } catch (error) {
@@ -81,10 +73,88 @@ router.post('/login', async (req: Request, res: Response) => {
   }
 });
 
-// Logout route (client-side only, just for completeness)
 router.post('/logout', (req: Request, res: Response) => {
-  // JWT tokens are stateless, so logout is handled on the client by removing the token
   return res.status(200).json({ message: 'Logged out successfully' });
+});
+
+// Password reset request endpoint
+router.post('/forgot-password', async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+    
+    const user = await prisma.user.findUnique({ where: { email } });
+    
+    // Don't reveal if the user exists or not for security
+    if (!user) {
+      return res.status(200).json({ 
+        message: 'If your email is registered, you will receive a password reset link' 
+      });
+    }
+    
+    // Generate reset token
+    const resetToken = await generatePasswordResetToken(user.id);
+    
+    // Send password reset email
+    await sendPasswordResetEmail(user.email, user.username, resetToken);
+    
+    return res.status(200).json({ 
+      message: 'If your email is registered, you will receive a password reset link' 
+    });
+  } catch (error) {
+    console.error('Password reset request error:', error);
+    return res.status(500).json({ error: 'Server error during password reset request' });
+  }
+});
+
+// Reset password endpoint
+router.post('/reset-password', async (req: Request, res: Response) => {
+  try {
+    const { token, newPassword } = req.body;
+    
+    if (!token || !newPassword) {
+      return res.status(400).json({ error: 'Token and new password are required' });
+    }
+    
+    // Hash the token from the URL
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    
+    // Find the password reset record
+    const passwordReset = await prisma.passwordReset.findFirst({
+      where: {
+        token: hashedToken,
+        expiresAt: {
+          gt: new Date()
+        }
+      }
+    });
+    
+    if (!passwordReset) {
+      return res.status(400).json({ error: 'Invalid or expired password reset token' });
+    }
+    
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    
+    // Update the user's password
+    await prisma.user.update({
+      where: { id: passwordReset.userId },
+      data: { password: hashedPassword }
+    });
+    
+    // Delete the password reset record
+    await prisma.passwordReset.delete({
+      where: { id: passwordReset.id }
+    });
+    
+    return res.status(200).json({ message: 'Password has been reset successfully' });
+  } catch (error) {
+    console.error('Password reset error:', error);
+    return res.status(500).json({ error: 'Server error during password reset' });
+  }
 });
 
 export default router;

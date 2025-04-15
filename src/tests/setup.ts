@@ -1,7 +1,5 @@
-// Import mockPrisma first
 import mockPrisma from './mockDatabase';
 
-// Then mock the database
 jest.mock('../config/database', () => {
   return {
     __esModule: true,
@@ -9,7 +7,6 @@ jest.mock('../config/database', () => {
   };
 });
 
-// Now import other dependencies
 import { ApolloServer } from '@apollo/server';
 import { typeDefs, resolvers } from '../schema';
 import jwt from 'jsonwebtoken';

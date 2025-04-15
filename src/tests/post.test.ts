@@ -29,7 +29,7 @@ describe('Post Management', () => {
     user1 = users.user1;
     user2 = users.user2;
     
-    // Reset mocks
+  
     mockPrisma.post.create.mockClear();
     mockPrisma.post.findMany.mockClear();
     mockPrisma.post.findUnique.mockClear();

@@ -3,20 +3,18 @@ import { startServer } from './server';
 import routes from './routes';
 import cors from 'cors';
 
-// First, initialize the Express app
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// Then, apply middleware
 app.use(cors({
-  origin: 'http://localhost:5173', // Your frontend URL
-  credentials: true // Enable if you're using cookies/sessions
+  origin: 'http://localhost:5173', 
+  credentials: true 
 }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Set up routes
+
 app.use('/', routes);
 
 

@@ -8,10 +8,8 @@ const followResolver = {
         extensions: { code: 'UNAUTHENTICATED' }
       });
       
-      // Convert userId to number if it's a string
       const userIdNum = typeof userId === 'string' ? parseInt(userId, 10) : userId;
       
-      // Prevent following yourself
       if (user.id === userIdNum) throw new GraphQLError("You can't follow yourself", {
         extensions: { code: 'BAD_USER_INPUT' }
       });
@@ -28,9 +26,7 @@ const followResolver = {
       if (!user) throw new GraphQLError('Not authenticated', {
         extensions: { code: 'UNAUTHENTICATED' }
       });
-      
-      // Convert userId to number if it's a string
-      const userIdNum = typeof userId === 'string' ? parseInt(userId, 10) : userId;
+            const userIdNum = typeof userId === 'string' ? parseInt(userId, 10) : userId;
       
       const followRecord = await prisma.follow.findFirst({
         where: { followerId: user.id, followingId: userIdNum }

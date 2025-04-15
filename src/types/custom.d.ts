@@ -1,6 +1,4 @@
-// Add empty declarations for modules that TypeScript can't find
-declare module 'accepts' {}
-declare module 'bcrypt' {}
+declare module 'accepts' {}declare module 'bcrypt' {}
 declare module 'body-parser' {}
 declare module 'connect' {}
 declare module 'cors' {}

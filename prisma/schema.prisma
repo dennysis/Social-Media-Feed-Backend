@@ -1,66 +1,73 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
-  binaryTargets = ["native", "debian-openssl-3.0.x"]
-
+model User {
+  id            Int            @id @default(autoincrement())
+  username      String         @unique
+  email         String         @unique
+  password      String
+  createdAt     DateTime       @default(now())
+  comments      Comment[]
+  following     Follow[]       @relation("following")
+  followers     Follow[]       @relation("followers")
+  likes         Like[]
+  passwordReset PasswordReset?
+  posts         Post[]
 }
 
-model User {
+model PasswordReset {
   id        Int      @id @default(autoincrement())
-  username  String   @unique
-  email     String   @unique
-  password  String
-  posts     Post[]
-  likes     Like[]
-  followers Follow[] @relation("followers")
-  following Follow[] @relation("following")
+  userId    Int      @unique
+  token     String
+  expiresAt DateTime
   createdAt DateTime @default(now())
-  comments  Comment[]
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model Post {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   content   String
-  author    User     @relation(fields: [authorId], references: [id])
   authorId  Int
-  likes     Like[]
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
   comments  Comment[]
+  likes     Like[]
+  author    User      @relation(fields: [authorId], references: [id])
 }
 
 model Like {
-  id      Int  @id @default(autoincrement())
-  post    Post @relation(fields: [postId], references: [id])
-  postId  Int
-  user    User @relation(fields: [userId], references: [id])
-  userId  Int
+  id        Int      @id @default(autoincrement())
+  postId    Int
+  userId    Int
   createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model Follow {
   id          Int      @id @default(autoincrement())
-  follower    User     @relation("following", fields: [followerId], references: [id])
   followerId  Int
-  following   User     @relation("followers", fields: [followingId], references: [id])
   followingId Int
   createdAt   DateTime @default(now())
-  
+  follower    User     @relation("following", fields: [followerId], references: [id])
+  following   User     @relation("followers", fields: [followingId], references: [id])
+
   @@unique([followerId, followingId])
 }
+
 model Comment {
   id        Int      @id @default(autoincrement())
   content   String
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId    Int
-  author    User     @relation(fields: [authorId], references: [id])
   authorId  Int
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
+  author    User     @relation(fields: [authorId], references: [id])
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
 }
-
-

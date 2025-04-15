@@ -22,6 +22,11 @@ export const userTypeDefs = `
     user: User!
   }
 
+  type PasswordResetResponse {
+    success: Boolean!
+    message: String!
+  }
+
   type Query {
     me: User
     user(id: ID!): User
@@ -34,5 +39,7 @@ export const userTypeDefs = `
     unfollowUser(userId: ID!): Boolean!
     likePost(postId: ID!): Like!
     unlikePost(postId: ID!): Boolean!
+    requestPasswordReset(email: String!): PasswordResetResponse!
+    resetPassword(token: String!, newPassword: String!): PasswordResetResponse!
   }
 `;

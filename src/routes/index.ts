@@ -12,7 +12,6 @@ router.get('/', (_, res) => {
   res.send('Social Media Backend is running!');
 });
 
-// Use the route modules
 router.use('/auth', authRoutes);
 router.use('/posts', postRoutes);
 router.use('/users', userRoutes);

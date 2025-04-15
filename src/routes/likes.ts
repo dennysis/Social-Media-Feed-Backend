@@ -5,7 +5,6 @@ import cors from 'cors';
 
 const router = Router();
 
-// Apply CORS middleware specifically for this router
 router.use(cors({
   origin: 'http://localhost:5173',
   credentials: true,
@@ -13,9 +12,7 @@ router.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Handle preflight OPTIONS requests explicitly
 router.options('/:postId', (req, res) => {
-  // Set CORS headers manually to ensure they're present
   res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -23,13 +20,11 @@ router.options('/:postId', (req, res) => {
   res.status(204).end();
 });
 
-// Like a post
 router.post('/:postId', authenticateUser, async (req, res) => {
   try {
     const { postId } = req.params;
     const userId = req.user.id;
     
-    // Check if post exists
     const post = await prisma.post.findUnique({
       where: { id: Number(postId) }
     });
@@ -38,7 +33,6 @@ router.post('/:postId', authenticateUser, async (req, res) => {
       return res.status(404).json({ error: 'Post not found' });
     }
     
-    // Check if already liked
     const existingLike = await prisma.like.findFirst({
       where: { 
         postId: Number(postId), 
@@ -50,7 +44,6 @@ router.post('/:postId', authenticateUser, async (req, res) => {
       return res.status(400).json({ error: 'Already liked this post' });
     }
     
-    // Create like
     const like = await prisma.like.create({
       data: {
         post: { connect: { id: Number(postId) } },
@@ -66,13 +59,11 @@ router.post('/:postId', authenticateUser, async (req, res) => {
   }
 });
 
-// Unlike a post
 router.delete('/:postId', authenticateUser, async (req, res) => {
   try {
     const { postId } = req.params;
     const userId = req.user.id;
     
-    // Find the like
     const like = await prisma.like.findFirst({
       where: { 
         postId: Number(postId), 
@@ -84,7 +75,6 @@ router.delete('/:postId', authenticateUser, async (req, res) => {
       return res.status(404).json({ error: 'Like not found' });
     }
     
-    // Delete the like
     await prisma.like.delete({
       where: { id: like.id }
     });

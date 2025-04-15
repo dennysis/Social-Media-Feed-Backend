@@ -12,7 +12,6 @@ async function startServer() {
   const app = express();
   const httpServer = http.createServer(app);
   
-  // Use the router for handling routes
   app.use('/', router);
   
   const apolloServer = new ApolloServer({
@@ -22,7 +21,6 @@ async function startServer() {
 
   await apolloServer.start();
   
-  // Apply auth middleware
   app.use('/graphql', authMiddleware);
   
   app.use(

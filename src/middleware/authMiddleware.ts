@@ -3,7 +3,6 @@ import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
-// Extend Express Request interface to include user property
 declare global {
   namespace Express {
     interface Request {

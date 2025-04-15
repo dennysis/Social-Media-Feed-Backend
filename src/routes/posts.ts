@@ -1,14 +1,13 @@
 import { Router } from 'express';
 import prisma from '../config/database';
 import { authenticateUser } from '../middleware/authMiddleware';
-import express from 'express'; // Add this import
+import express from 'express';
 
 const router = Router();
 
-// Add this line to ensure JSON parsing for this router
+
 router.use(express.json());
 
-// Get all posts
 router.get('/', async (req, res) => {
   try {
     const posts = await prisma.post.findMany({
@@ -24,7 +23,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get a specific post
+
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -47,14 +46,13 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Create a post
 router.post('/', authenticateUser, async (req, res) => {
   try {
     console.log('Headers:', req.headers);
     console.log('Body type:', typeof req.body);
     console.log('Body:', req.body);
     
-    // Add a fallback if req.body is undefined
+
     const content = req.body?.content || '';
     
     if (!content) {
@@ -78,7 +76,7 @@ router.post('/', authenticateUser, async (req, res) => {
   }
 });
 
-// Update a post
+
 router.put('/:id', authenticateUser, async (req, res) => {
   try {
     const { id } = req.params;
@@ -89,7 +87,7 @@ router.put('/:id', authenticateUser, async (req, res) => {
       return res.status(400).json({ error: 'Content is required' });
     }
     
-    // Check if post exists and belongs to user
+
     const existingPost = await prisma.post.findUnique({
       where: { id: Number(id) }
     });
@@ -115,13 +113,13 @@ router.put('/:id', authenticateUser, async (req, res) => {
   }
 });
 
-// Delete a post
+
 router.delete('/:id', authenticateUser, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
     
-    // Check if post exists and belongs to user
+    
     const existingPost = await prisma.post.findUnique({
       where: { id: Number(id) }
     });

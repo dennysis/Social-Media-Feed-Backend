@@ -1,7 +1,5 @@
-// First, import the mock database
 import mockPrisma from './mockDatabase';
 
-// Then, mock the database module
 jest.mock('../config/database', () => {
   return {
     __esModule: true,
@@ -9,7 +7,6 @@ jest.mock('../config/database', () => {
   };
 });
 
-// Now import everything else
 import { createTestServer, createTestUsers, generateToken } from './setup';
 
 describe('Follow Functionality', () => {
@@ -46,13 +43,11 @@ describe('Follow Functionality', () => {
       user2 = users.user2;
       console.log('Test users set up');
       
-      // Reset mock implementations for each test
       mockPrisma.follow.findFirst.mockReset();
       mockPrisma.follow.create.mockReset();
       mockPrisma.follow.delete.mockReset();
       mockPrisma.user.findUnique.mockReset();
       
-      // Set up user.findUnique mock to return proper user data
       mockPrisma.user.findUnique.mockImplementation((args) => {
         if (args.where.id === 1) {
           return Promise.resolve({
@@ -73,7 +68,6 @@ describe('Follow Functionality', () => {
         }
       });
       
-      // Set up follow.create mock to return proper follow data
       mockPrisma.follow.create.mockImplementation((data) => {
         const followerId = data.data.follower.connect.id;
         const followingId = data.data.following.connect.id;
@@ -96,7 +90,6 @@ describe('Follow Functionality', () => {
     try {
       console.log('Testing follow user...');
       
-      // Mock the Follow.follower resolver to return a user
       mockPrisma.user.findUnique.mockImplementation((args) => {
         if (args.where.id === 2) {
           return Promise.resolve({
@@ -141,17 +134,14 @@ describe('Follow Functionality', () => {
 
       console.log('Operation result:', JSON.stringify(result.body.singleResult, null, 2));
 
-      // If there are errors, log them for debugging
       if (result.body.singleResult.errors) {
         console.error('GraphQL errors:', JSON.stringify(result.body.singleResult.errors, null, 2));
       }
 
-      // Check if the data exists before asserting on it
       if (result.body.singleResult.data && result.body.singleResult.data.followUser) {
         expect(result.body.singleResult.data.followUser.follower.username).toBe('testuser2');
         expect(result.body.singleResult.data.followUser.following.username).toBe('testuser1');
       } else {
-        // If data doesn't exist, fail the test with a helpful message
         fail('Expected followUser data to be returned, but got: ' + 
              JSON.stringify(result.body.singleResult, null, 2));
       }
@@ -196,7 +186,7 @@ describe('Follow Functionality', () => {
     const result = await server.executeOperation({
       query: followUserMutation
     }, {
-      contextValue: {} // No user in context
+      contextValue: {} 
     });
 
     expect(result.body.singleResult.errors).toBeDefined();
@@ -204,7 +194,6 @@ describe('Follow Functionality', () => {
   });
 
   test('Unfollow a user', async () => {
-    // Mock finding an existing follow record
     mockPrisma.follow.findFirst.mockResolvedValue({
       id: 1,
       followerId: user2.id,
@@ -231,7 +220,6 @@ describe('Follow Functionality', () => {
   });
 
   test('Fail to unfollow a user you are not following', async () => {
-    // Mock not finding a follow record
     mockPrisma.follow.findFirst.mockResolvedValue(null);
 
     const unfollowUserMutation = `
@@ -262,7 +250,7 @@ describe('Follow Functionality', () => {
     const result = await server.executeOperation({
       query: unfollowUserMutation
     }, {
-      contextValue: {} // No user in context
+      contextValue: {} 
     });
 
     expect(result.body.singleResult.errors).toBeDefined();

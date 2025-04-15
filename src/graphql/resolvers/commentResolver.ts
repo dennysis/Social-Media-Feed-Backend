@@ -64,7 +64,6 @@ const commentResolver = {
         extensions: { code: 'NOT_FOUND' }
       });
       
-      // Check if user is the author of the comment or the post owner
       if (comment.authorId !== user.id) {
         const post = await prisma.post.findUnique({ where: { id: comment.postId } });
         

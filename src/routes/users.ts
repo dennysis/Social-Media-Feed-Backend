@@ -4,7 +4,7 @@ import { authenticateUser } from '../middleware/authMiddleware';
 
 const router = Router();
 
-// Get current user profile
+
 router.get('/me', authenticateUser, async (req, res) => {
   try {
     const userId = req.user.id;
@@ -22,7 +22,7 @@ router.get('/me', authenticateUser, async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
     
-    // Remove password from response
+
     const { password, ...userWithoutPassword } = user;
     return res.status(200).json(userWithoutPassword);
   } catch (error) {
@@ -31,7 +31,7 @@ router.get('/me', authenticateUser, async (req, res) => {
   }
 });
 
-// Get user by ID
+
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -48,8 +48,7 @@ router.get('/:id', async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    
-    // Remove password from response
+ 
     const { password, ...userWithoutPassword } = user;
     return res.status(200).json(userWithoutPassword);
   } catch (error) {

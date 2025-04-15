@@ -1,7 +1,5 @@
-// First, import the mock database
 import mockPrisma from './mockDatabase';
 
-// Then, mock the database module
 jest.mock('../config/database', () => {
   return {
     __esModule: true,
@@ -9,7 +7,6 @@ jest.mock('../config/database', () => {
   };
 });
 
-// Now import everything else
 import { createTestServer, createTestUsers, generateToken } from './setup';
 
 describe('Like Functionality', () => {
@@ -33,7 +30,6 @@ describe('Like Functionality', () => {
     user1 = users.user1;
     user2 = users.user2;
     
-    // Create a mock post
     post = {
       id: 1,
       content: 'Test post for likes',
@@ -42,7 +38,6 @@ describe('Like Functionality', () => {
       updatedAt: new Date()
     };
     
-    // Reset mocks
     mockPrisma.like.create.mockClear();
     mockPrisma.like.findFirst.mockClear();
     mockPrisma.like.delete.mockClear();
@@ -55,7 +50,6 @@ describe('Like Functionality', () => {
   });
 
   test('Like a post', async () => {
-    // Mock like.findFirst to return null (no existing like)
     mockPrisma.like.findFirst.mockResolvedValue(null);
     
     const likePostMutation = `
@@ -86,7 +80,6 @@ describe('Like Functionality', () => {
   });
 
   test('Fail to like a post twice', async () => {
-    // Mock like.findFirst to return an existing like
     mockPrisma.like.findFirst.mockResolvedValue({
       id: 1,
       postId: post.id,
@@ -115,7 +108,6 @@ describe('Like Functionality', () => {
   });
 
   test('Unlike a post', async () => {
-    // Mock like.findFirst to return an existing like
     mockPrisma.like.findFirst.mockResolvedValue({
       id: 1,
       postId: post.id,
@@ -142,7 +134,6 @@ describe('Like Functionality', () => {
   });
 
   test('Fail to unlike a post that is not liked', async () => {
-    // Mock like.findFirst to return null (no existing like)
     mockPrisma.like.findFirst.mockResolvedValue(null);
     
     const unlikePostMutation = `
