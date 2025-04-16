@@ -4,7 +4,6 @@ import { logger } from '../utils/logger';
 
 export const checkDatabaseConnection = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // Try a simple query to check connection
     await prisma.$queryRaw`SELECT 1`;
     next();
   } catch (error) {

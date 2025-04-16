@@ -7,7 +7,7 @@ jest.mock('../config/database', () => {
   };
 });
 
-// Mock the email service
+
 jest.mock('../utils/emailService', () => ({
   sendWelcomeEmail: jest.fn().mockResolvedValue(undefined),
   generatePasswordResetToken: jest.fn().mockResolvedValue('mock-reset-token'),
@@ -53,8 +53,7 @@ describe('User Authentication', () => {
     expect(result.body.singleResult.data.register.token).toBeDefined();
     expect(result.body.singleResult.data.register.user.username).toBe('newuser');
     expect(result.body.singleResult.data.register.user.email).toBe('new@example.com');
-    
-    // Verify welcome email was sent
+   
     expect(sendWelcomeEmail).toHaveBeenCalledWith('new@example.com', 'newuser');
   });
 
@@ -109,7 +108,7 @@ describe('User Authentication', () => {
   });
   
   test('Request password reset', async () => {
-    // Mock the user find
+   
     mockPrisma.user.findUnique.mockResolvedValueOnce({
       id: 1,
       username: 'resetuser',
@@ -118,7 +117,7 @@ describe('User Authentication', () => {
       createdAt: new Date()
     });
     
-    // Mock the password reset creation
+   
     mockPrisma.passwordReset.upsert.mockResolvedValueOnce({
       id: 1,
       userId: 1,
@@ -147,7 +146,7 @@ describe('User Authentication', () => {
   });
   
   test('Reset password with valid token', async () => {
-    // Mock finding the password reset record
+ 
     mockPrisma.passwordReset.findFirst.mockResolvedValueOnce({
       id: 1,
       userId: 1,
@@ -155,8 +154,7 @@ describe('User Authentication', () => {
       expiresAt: new Date(Date.now() + 3600000),
       createdAt: new Date()
     });
-    
-    // Mock updating the user password
+   
     mockPrisma.user.update.mockResolvedValueOnce({
       id: 1,
       username: 'resetuser',
@@ -165,7 +163,6 @@ describe('User Authentication', () => {
       createdAt: new Date()
     });
     
-    // Mock deleting the password reset record
     mockPrisma.passwordReset.delete.mockResolvedValueOnce({
       id: 1,
       userId: 1,
@@ -194,7 +191,7 @@ describe('User Authentication', () => {
   });
   
   test('Reset password with invalid token', async () => {
-    // Mock finding no password reset record (invalid token)
+   
     mockPrisma.passwordReset.findFirst.mockResolvedValueOnce(null);
     
     const resetPasswordMutation = `

@@ -99,10 +99,8 @@ const userResolver = {
     },
     resetPassword: async (_: any, { token, newPassword }: { token: string; newPassword: string }) => {
       try {
-        // Hash the token from the URL
         const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
         
-        // Find the password reset record
         const passwordReset = await prisma.passwordReset.findFirst({
           where: {
             token: hashedToken,
@@ -116,22 +114,18 @@ const userResolver = {
         });
         
         if (!passwordReset) {
-          // This needs to throw a GraphQL error for the test to pass
           throw new GraphQLError('Invalid or expired password reset token', {
             extensions: { code: 'BAD_USER_INPUT' }
           });
         }
         
-        // Hash the new password
         const hashedPassword = await bcrypt.hash(newPassword, 10);
         
-        // Update the user's password
         await prisma.user.update({
           where: { id: passwordReset.userId },
           data: { password: hashedPassword }
         });
         
-        // Delete the password reset record
         await prisma.passwordReset.delete({
           where: { id: passwordReset.id }
         });
@@ -141,12 +135,10 @@ const userResolver = {
           message: 'Password has been reset successfully'
         };
       } catch (error) {
-        // If it's already a GraphQL error, rethrow it
         if (error instanceof GraphQLError) {
           throw error;
         }
         
-        // Log the error but still throw a GraphQL error for the client
         logger.error(`Password reset error: ${error}`);
         throw new GraphQLError('Failed to reset password', {
           extensions: { code: 'INTERNAL_SERVER_ERROR' }

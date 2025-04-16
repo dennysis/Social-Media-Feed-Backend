@@ -32,7 +32,6 @@ router.post('/register', async (req: Request, res: Response) => {
       }
     });
     
-    // Send welcome email
     await sendWelcomeEmail(email, username);
     
     const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
@@ -77,7 +76,6 @@ router.post('/logout', (req: Request, res: Response) => {
   return res.status(200).json({ message: 'Logged out successfully' });
 });
 
-// Password reset request endpoint
 router.post('/forgot-password', async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
@@ -88,17 +86,14 @@ router.post('/forgot-password', async (req: Request, res: Response) => {
     
     const user = await prisma.user.findUnique({ where: { email } });
     
-    // Don't reveal if the user exists or not for security
     if (!user) {
       return res.status(200).json({ 
         message: 'If your email is registered, you will receive a password reset link' 
       });
     }
     
-    // Generate reset token
     const resetToken = await generatePasswordResetToken(user.id);
     
-    // Send password reset email
     await sendPasswordResetEmail(user.email, user.username, resetToken);
     
     return res.status(200).json({ 
@@ -110,7 +105,6 @@ router.post('/forgot-password', async (req: Request, res: Response) => {
   }
 });
 
-// Reset password endpoint
 router.post('/reset-password', async (req: Request, res: Response) => {
   try {
     const { token, newPassword } = req.body;
@@ -119,10 +113,8 @@ router.post('/reset-password', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Token and new password are required' });
     }
     
-    // Hash the token from the URL
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
     
-    // Find the password reset record
     const passwordReset = await prisma.passwordReset.findFirst({
       where: {
         token: hashedToken,
@@ -136,16 +128,13 @@ router.post('/reset-password', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid or expired password reset token' });
     }
     
-    // Hash the new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     
-    // Update the user's password
     await prisma.user.update({
       where: { id: passwordReset.userId },
       data: { password: hashedPassword }
     });
     
-    // Delete the password reset record
     await prisma.passwordReset.delete({
       where: { id: passwordReset.id }
     });

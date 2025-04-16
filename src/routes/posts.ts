@@ -1,12 +1,63 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import prisma from '../config/database';
 import { authenticateUser } from '../middleware/authMiddleware';
 import express from 'express';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+import { logger } from '../utils/logger';
 
 const router = Router();
-
-
 router.use(express.json());
+
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    
+    const uploadDir = path.join(__dirname, '../../uploads');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+  
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, 'post-image-' + uniqueSuffix + ext);
+  }
+});
+
+
+const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+  // Accept jpeg, jpg, png, gif, webp
+  if (file.mimetype.startsWith('image/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Invalid file type. Only images are allowed.'));
+  }
+};
+
+
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024 
+  }
+});
+
+const handleMulterError = (err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ error: 'File too large. Maximum size is 5MB.' });
+    }
+    return res.status(400).json({ error: `Upload error: ${err.message}` });
+  } else if (err) {
+    return res.status(400).json({ error: err.message });
+  }
+  next();
+};
 
 router.get('/', async (req, res) => {
   try {
@@ -14,11 +65,14 @@ router.get('/', async (req, res) => {
       include: { 
         author: true, 
         likes: true 
+      },
+      orderBy: {
+        createdAt: 'desc'
       }
     });
     return res.status(200).json(posts);
   } catch (error) {
-    console.error('Error fetching posts:', error);
+    logger.error(`Error fetching posts: ${error}`);
     return res.status(500).json({ error: 'Server error while fetching posts' });
   }
 });
@@ -41,85 +95,143 @@ router.get('/:id', async (req, res) => {
     
     return res.status(200).json(post);
   } catch (error) {
-    console.error('Error fetching post:', error);
+    logger.error(`Error fetching post: ${error}`);
     return res.status(500).json({ error: 'Server error while fetching post' });
   }
 });
 
-router.post('/', authenticateUser, async (req, res) => {
+router.post('/', authenticateUser, upload.single('image'), handleMulterError, async (req: Request, res: Response) => {
   try {
-    console.log('Headers:', req.headers);
-    console.log('Body type:', typeof req.body);
-    console.log('Body:', req.body);
-    
-
     const content = req.body?.content || '';
     
-    if (!content) {
-      return res.status(400).json({ error: 'Content is required' });
+    if (!content && !req.file) {
+      return res.status(400).json({ error: 'Either content or image is required' });
     }
     
     const userId = req.user.id;
     
+
+    const postData: any = {
+      content,
+      author: { connect: { id: userId } }
+    };
+    
+    
+    if (req.file) {
+ 
+      const imageUrl = `/uploads/${req.file.filename}`;
+      postData.imageUrl = imageUrl;
+    }
+
+    
     const post = await prisma.post.create({
-      data: {
-        content,
-        author: { connect: { id: userId } }
-      },
-      include: { author: true }
+      data: postData,
+      include: {
+        author: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            createdAt: true,
+            
+          }
+        }
+      }
     });
     
     return res.status(201).json(post);
   } catch (error) {
-    console.error('Error creating post:', error);
+ it
+    if (req.file) {
+      try {
+        fs.unlinkSync(req.file.path);
+      } catch (unlinkError) {
+        logger.error(`Error deleting file after failed post: ${unlinkError}`);
+      }
+    }
+    
+    logger.error(`Error creating post: ${error}`);
     return res.status(500).json({ error: 'Server error while creating post' });
   }
 });
 
-
-router.put('/:id', authenticateUser, async (req, res) => {
+router.put('/:id', authenticateUser, upload.single('image'), handleMulterError, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { content } = req.body;
     const userId = req.user.id;
     
-    if (!content) {
-      return res.status(400).json({ error: 'Content is required' });
+    if (!content && !req.file) {
+      return res.status(400).json({ error: 'Either content or image is required' });
     }
     
-
+   
     const existingPost = await prisma.post.findUnique({
       where: { id: Number(id) }
     });
     
     if (!existingPost) {
+
+      if (req.file) {
+        fs.unlinkSync(req.file.path);
+      }
       return res.status(404).json({ error: 'Post not found' });
     }
     
     if (existingPost.authorId !== userId) {
+
+      if (req.file) {
+        fs.unlinkSync(req.file.path);
+      }
       return res.status(403).json({ error: 'Not authorized to update this post' });
+    }
+  
+    const updateData: any = {};
+    if (content) {
+      updateData.content = content;
+    }
+
+    if (req.file) {
+  
+      const imageUrl = `/uploads/${req.file.filename}`;
+      updateData.imageUrl = imageUrl;
+      
+ 
+      if (existingPost.imageUrl) {
+        const oldImagePath = path.join(__dirname, '../../', existingPost.imageUrl.replace(/^\//, ''));
+        if (fs.existsSync(oldImagePath)) {
+          fs.unlinkSync(oldImagePath);
+        }
+      }
     }
     
     const updatedPost = await prisma.post.update({
       where: { id: Number(id) },
-      data: { content },
+      data: updateData,
       include: { author: true }
     });
     
     return res.status(200).json(updatedPost);
   } catch (error) {
-    console.error('Error updating post:', error);
+ 
+    if (req.file) {
+      try {
+        fs.unlinkSync(req.file.path);
+      } catch (unlinkError) {
+        logger.error(`Error deleting file after failed update: ${unlinkError}`);
+      }
+    }
+    
+    logger.error(`Error updating post: ${error}`);
     return res.status(500).json({ error: 'Server error while updating post' });
   }
 });
-
 
 router.delete('/:id', authenticateUser, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
-    
-    
+   
     const existingPost = await prisma.post.findUnique({
       where: { id: Number(id) }
     });
@@ -131,6 +243,13 @@ router.delete('/:id', authenticateUser, async (req, res) => {
     if (existingPost.authorId !== userId) {
       return res.status(403).json({ error: 'Not authorized to delete this post' });
     }
+
+    if (existingPost.imageUrl) {
+      const imagePath = path.join(__dirname, '../../', existingPost.imageUrl.replace(/^\//, ''));
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+      }
+    }
     
     await prisma.post.delete({
       where: { id: Number(id) }
@@ -138,9 +257,11 @@ router.delete('/:id', authenticateUser, async (req, res) => {
     
     return res.status(200).json({ message: 'Post deleted successfully' });
   } catch (error) {
-    console.error('Error deleting post:', error);
+    logger.error(`Error deleting post: ${error}`);
     return res.status(500).json({ error: 'Server error while deleting post' });
   }
 });
+
+router.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
 
 export default router;

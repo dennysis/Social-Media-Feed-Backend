@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import prisma from '../config/database';
 import { logger } from './logger';
 
-// Create reusable transporter with better error handling
+
 const createTransporter = () => {
   try {
     return nodemailer.createTransport({
@@ -21,7 +21,7 @@ const createTransporter = () => {
   }
 };
 
-// Create the transporter once
+
 let transporter: nodemailer.Transporter;
 try {
   transporter = createTransporter();
@@ -29,7 +29,7 @@ try {
   logger.error(`Email service initialization failed: ${error}`);
 }
 
-// Common email styles
+
 const emailStyles = `
   * {
     margin: 0;
@@ -199,21 +199,19 @@ export const sendWelcomeEmail = async (email: string, username: string) => {
     logger.info(`Welcome email sent to ${email}`);
   } catch (error) {
     logger.error(`Error sending welcome email: ${error}`);
-    // Don't throw the error to prevent registration failure
+  
   }
 };
 
 export const generatePasswordResetToken = async (userId: number): Promise<string> => {
-  // Generate a random token
+
   const resetToken = crypto.randomBytes(32).toString('hex');
   
-  // Hash the token for storage
   const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
   
-  // Set expiry time (1 hour from now)
-  const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
   
-  // Store the token in the database
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+
   await prisma.passwordReset.upsert({
     where: { userId },
     update: {
@@ -302,6 +300,6 @@ export const sendPasswordResetEmail = async (email: string, username: string, re
     logger.info(`Password reset email sent to ${email}`);
   } catch (error) {
     logger.error(`Error sending password reset email: ${error}`);
-    // Don't throw the error to prevent password reset flow failure
+    
   }
 };
