@@ -16,7 +16,10 @@ const prisma = new PrismaClient({
       url: databaseUrl,
     },
   },
+  // connectionLimit: 5,
   log: process.env.NODE_ENV === 'test' ? ['query', 'error', 'warn'] : ['error'],
+  connectionLimit: 5,
+
 })
 
 export default prisma
