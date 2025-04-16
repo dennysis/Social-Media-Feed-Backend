@@ -46,6 +46,7 @@
         "@types/jsonwebtoken": "^9.0.9",
         "@types/long": "^5.0.0",
         "@types/mime": "^4.0.0",
+        "@types/mime": "^3.0.1",
         "@types/ms": "^2.1.0",
         "@types/node": "^22.14.0",
         "@types/node-fetch": "^2.6.12",
