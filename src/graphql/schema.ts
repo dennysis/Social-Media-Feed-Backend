@@ -1,7 +1,7 @@
-import userResolver from './graphql/resolvers/userResolver';
-import postResolver from './graphql/resolvers/postResolver';
-import likeResolver from './graphql/resolvers/likeResolver';
-import followResolver from './graphql/resolvers/followResolver';
+import userResolver from './resolvers/userResolver';
+import postResolver from './resolvers/postResolver';
+import likeResolver from './resolvers/likeResolver';
+import followResolver from './resolvers/followResolver';
 
 const typeDefs = `
   type User {
