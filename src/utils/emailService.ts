@@ -171,10 +171,10 @@ export const sendWelcomeEmail = async (email: string, username: string) => {
               <li>Build your own personal network</li>
             </ul>
             
-            <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/explore" class="button">Explore Content</a>
+            <a href="${process.env.FRONTEND_URL || 'https://four04-intervention.onrender.com/'}/explore" class="button">Explore Content</a>
             
             <div class="note">
-              <p style="margin-bottom: 0;">Need help getting started? Check out our <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/getting-started" style="color: #4a6cf7; text-decoration: none;">quick start guide</a> for tips on making the most of your experience.</p>
+              <p style="margin-bottom: 0;">Need help getting started? Check out our <a href="${process.env.FRONTEND_URL || 'https://four04-intervention.onrender.com/'}/getting-started" style="color: #4a6cf7; text-decoration: none;">quick start guide</a> for tips on making the most of your experience.</p>
             </div>
             
             <p>If you have any questions or need assistance, our support team is always ready to help!</p>
@@ -188,7 +188,7 @@ export const sendWelcomeEmail = async (email: string, username: string) => {
               </div>
               <p style="margin-top: 15px;">
                 You're receiving this email because you signed up for Social Media App.<br>
-                If you didn't create this account, please <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/contact" style="color: #4a6cf7;">contact us</a>.
+                If you didn't create this account, please <a href="${process.env.FRONTEND_URL || 'https://four04-intervention.onrender.com/'}/contact" style="color: #4a6cf7;">contact us</a>.
               </p>
             </div>
           </div>
@@ -281,7 +281,7 @@ export const sendPasswordResetEmail = async (email: string, username: string, re
             <p>If the button above doesn't work, copy and paste this link into your browser:</p>
             <p style="word-break: break-all; background-color: #f5f5f5; padding: 10px; border-radius: 4px; font-size: 14px;">${resetUrl}</p>
             
-            <p>If you didn't request a password reset, please <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/contact" style="color: #4a6cf7; text-decoration: none;">contact our support team</a> immediately as your account may be at risk.</p>
+            <p>If you didn't request a password reset, please <a href="${process.env.FRONTEND_URL || 'https://four04-intervention.onrender.com/'}/contact" style="color: #4a6cf7; text-decoration: none;">contact our support team</a> immediately as your account may be at risk.</p>
             
             <p>Regards,<br>The Social Media App Security Team</p>
             
